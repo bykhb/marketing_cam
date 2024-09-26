@@ -118,7 +118,7 @@ def get_gpt_response(prompt):
 
 def main():
     st.title("Offering Framework(가제)")
-    st.write("김한범 매니저님, 원하시는 캠페인 아이디어를 프롬프트 형식으로 입력해주세요.")
+    st.write("유수빈 매니저님, 원하시는 캠페인 아이디어를 프롬프트 형식으로 입력해주세요.")
 
     # 세로 간격 추가
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
