@@ -124,7 +124,7 @@ def main():
         st.session_state.messages = []
 
     # 프롬프트 입력칸
-    placeholder = "(예시) 아이폰 16 사전 예약할 고객에게 TDS에서 예약하게 하는 MMS 캠페인을 만들어줘"
+    placeholder = "(예시) SK텔레콤에서 아이폰 16 사전 예약할 고객에게 TDS에서 예약하게 하는 MMS 캠페인을 만들어줘"
 
     campaign_prompt = st.text_area(
         "마케팅 캠패인 프롬프트",
