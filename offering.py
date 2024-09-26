@@ -1,7 +1,7 @@
 import streamlit as st
 import os
-import openai
-from openai import OpenAI
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage, SystemMessage
 
 # Streamlit Cloud에서는 이 부분이 필요 없으므로 조건부로 실행
 if not os.getenv("STREAMLIT_CLOUD"):
@@ -15,11 +15,20 @@ if not api_key:
     st.error("OpenAI API 키가 설정되지 않았습니다. 환경 변수를 확인해주세요.")
     st.stop()
 
-client = OpenAI(api_key=api_key)
+# LangChain LLM 설정
+llm = ChatOpenAI(
+    model='anthropic/claude-3-5-sonnet-20240620',
+    temperature=0.9,
+    frequency_penalty=1.5,
+    max_tokens=4096,
+    timeout=None,
+    base_url="https://api.platform.a15t.com/v1"
+)
+
 
 def get_gpt_response(prompt):
     try:
-        # Define the desired format
+        # 원하는 형식 정의
         format_instructions = """
 당신은 마케팅 캠페인 아이디어를 생성하는 도우미입니다. 답변을 아래의 형식으로 제공해 주세요:
 
@@ -36,23 +45,18 @@ def get_gpt_response(prompt):
 '''
 
 [캠페인명]
-"아이폰 16 TDS 사전예약"
+아이폰 16 TDS 사전예약
 
 [대상군 수]
-"450,000명"
+450,000명
 
 [캠페인 기간]
-'''
 2024년 9월 13일(금) ~ 20일(금)
 (아이폰 사존예약기간 동안)
-'''
 
 [캠페인 텍스트]
-'''
-<title>
     (광고)[SKT] iPhone 16 사전에약 혜택 안내
 
-    <intro>
     '홍길동' 고객님, 안녕하세요.
     iPhone 16 사전예약이 2024년 9월 13일(금) 오후 9시에 시작됩니다.
     
@@ -61,7 +65,6 @@ def get_gpt_response(prompt):
     
     SK텔레콤에서 준비한 다양한 혜택을 지금 확인해 보세요.
     
-		<body>  
     ▶ Netflix Watch Kit 자세히 보기: http://t-mms.kr/jzZ/#74
     * 위 URL은 사전예약 시작과 함께 2024년 9월 13일(금) 오후 9시에 오픈됩니다.
     
@@ -71,48 +74,34 @@ def get_gpt_response(prompt):
     
     ■ 문의: T 다이렉트샵 고객센터(1525, 무료)
 
-    <close>
     SKT와 함께해 주셔서 감사합니다.
     
     무료 수신거부 1504
-'''
 
 [캠페인 이미지]
-이미지 생성 필요
+MMS에 들어가는 크기로 캠페인 context에 맞게 이미지 생성해줘
 
 [예상 캠페인 반응율]
 "5.6%"
 
 ---
+마케팅 캠페인 아이디어 생성 지침
+1. 포맷에서 [..] 안에 들어간 내용은 예시입니다.답변을 예시와 비슷한 형식으로 만들어 주세요.
+2. 제안하는 캠페인 Context의 개수는 최대 5개로 제한.
+3. 캠페인을 여러 개 제안할 때는 각 캠페인의 context가 달라야 됩니다.
+4. 캠페인 이미지 부분에도 gpt가 이미지를 생성해서 넣어줘
+5. context 여러개를 제안할 떄는 '-----'와 같은 line으로 구분지어줘
 
-[2번]
-
-(위와 동일한 형식으로 최대 5개까지 제안)
-
-포맷에서 "" 안에 들어간 내용은 예시입니다. 답변을 예시와 비슷한 형식으로 만들어 주세요.
-
-제안하는 캠페인 Context의 개수는 최대 5개로 제한합니다.
 """
 
         # Combine the format instructions with the system prompt
         messages = [
-            {
-                "role": "system",
-                "content": format_instructions
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
+            SystemMessage(content=format_instructions),
+            HumanMessage(content=prompt)
         ]
 
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens = 5000,
-            temperature = 0.7,
-        )
-        return response.choices[0].message.content.strip()
+        response = llm(messages)
+        return response.content
     except Exception as e:
         return f"Error: {str(e)}"
 
